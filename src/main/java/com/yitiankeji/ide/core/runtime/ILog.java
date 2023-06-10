@@ -2,7 +2,7 @@ package com.yitiankeji.ide.core.runtime;
 
 public interface ILog {
 
-    IPlugin getPlugin();
+    Plugin getPlugin();
 
     void debug(String message);
 
