@@ -1,33 +1,20 @@
 package com.yitiankeji.ide.core.runtime;
 
+import lombok.Getter;
+import lombok.ToString;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@Getter
+@ToString
 public class ExtensionElement {
 
-    private String id;
-    private String name;
     private ExtensionElement parent;
     private final Map<String, String> attributes = new HashMap<>();
     private final List<ExtensionElement> children = new ArrayList<>();
-
-    public String getId() {
-        return id;
-    }
-
-    void setId(String id) {
-        this.id = id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    void setName(String name) {
-        this.name = name;
-    }
 
     public ExtensionElement getParent() {
         return parent;
@@ -47,9 +34,5 @@ public class ExtensionElement {
 
     public List<ExtensionElement> getChildren() {
         return children;
-    }
-
-    public Object createExtentionObject() {
-        return null;
     }
 }

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plugin>
+    <extension id="111" name="测试" point="aaa.bbb.editor">
+        <editor id="myplugin.editors.MultiPageEditor"
+                name="Sample Multi-page Editor"
+                icon="icons/sample.png"
+                extensions="mpe"
+                class="myplugin.editors.MultiPageEditor"
+                contributorClass="myplugin.editors.MultiPageEditorContributor">
+        </editor>
+    </extension>
+    <extension point="org.eclipse.ui.newWizards">
+        <category name="Sample Wizards" id="my-plugin" />
+        <wizard
+                id="myplugin.wizards.SampleNewWizard"
+                name="Multi-page Editor file"
+                icon="icons/sample.png"
+                class="myplugin.wizards.SampleNewWizard"
+                category="my-plugin">
+        </wizard>
+    </extension>
+</plugin>

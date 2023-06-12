@@ -1,6 +1,5 @@
 package com.yitiankeji.ide.core.runtime;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 import javax.swing.*;
@@ -10,17 +9,29 @@ import java.net.URL;
 import java.util.List;
 
 @Getter
-@AllArgsConstructor
 public class Plugin {
 
-    private String id;
-    private String name;
-    private String description;
-    private String location;
+    private final String id;
+    private final String name;
+    private final String description;
+    private final String location;
+    private final Log log;
     private int state;
+
+    public Plugin(String id, String name, String description, String location) {
+        this.id = id;
+        this.name = name;
+        this.description = description;
+        this.location = location;
+        log = new Log(this);
+    }
 
     void setState(int state) {
         this.state = state;
+    }
+
+    public Log getLog() {
+        return log;
     }
 
     public URL getResource(String name) {
