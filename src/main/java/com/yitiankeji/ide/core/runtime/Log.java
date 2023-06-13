@@ -1,97 +1,133 @@
 package com.yitiankeji.ide.core.runtime;
 
-import lombok.extern.slf4j.Slf4j;
+import java.io.File;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
-@Slf4j
 public class Log {
 
     private final Plugin plugin;
+    private final PrintStream out;
 
-    public Log(Plugin plugin) {
+    private static final String TRACE = "TRACE";
+    private static final String DEBUG = "DEBUG";
+    private static final String INFO = "INFO";
+    private static final String WARN = "WARN";
+    private static final String ERROR = "ERROR";
+
+    public Log(Plugin plugin) throws IOException {
         this.plugin = plugin;
+
+        File file = new File(new File("."), ".log");
+        out = new PrintStream(file);
     }
 
     public Plugin getPlugin() {
         return plugin;
     }
 
-    public void trace(String msg) {
-        log.trace(msg);
+    public void trace(String message) {
+        logfile(TRACE, message);
     }
 
     public void trace(String format, Object arg) {
-        log.trace(format, arg);
+        logfile(TRACE, format, arg);
     }
 
     public void trace(String format, Object... args) {
-        log.trace(format, args);
+        logfile(TRACE, format, args);
     }
 
-    public void trace(String msg, Throwable throwable) {
-        log.trace(msg, throwable);
+    public void trace(String message, Throwable throwable) {
+        logfile(TRACE, message, throwable);
     }
 
     public void debug(String message) {
-        log.debug(message);
+        logfile(DEBUG, message);
     }
 
     public void debug(String format, Object arg) {
-        log.debug(format, arg);
+        logfile(DEBUG, format, arg);
     }
 
     public void debug(String format, Object... args) {
-        log.debug(format, args);
+        logfile(DEBUG, format, args);
     }
 
     public void debug(String message, Throwable throwable) {
-        log.debug(message, throwable);
+        logfile(DEBUG, message, throwable);
     }
 
     public void info(String message) {
-        log.info(message);
-    }
-
-    public void info(String message, Throwable throwable) {
-        log.info(message, throwable);
+        logfile(INFO, message);
     }
 
     public void info(String format, Object arg) {
-        log.info(format, arg);
+        logfile(INFO, format, arg);
     }
 
     public void info(String format, Object... args) {
-        log.info(format, args);
+        logfile(INFO, format, args);
+    }
+
+    public void info(String message, Throwable throwable) {
+        logfile(INFO, message, throwable);
     }
 
     public void warn(String message) {
-        log.warn(message);
+        logfile(WARN, message);
     }
 
     public void warn(String format, Object arg) {
-        log.warn(format, arg);
+        logfile(WARN, format, arg);
     }
 
     public void warn(String format, Object... args) {
-        log.warn(format, args);
+        logfile(WARN, format, args);
     }
 
     public void warn(String message, Throwable throwable) {
-        log.warn(message, throwable);
+        logfile(WARN, message, throwable);
     }
 
     public void error(String message) {
-        log.error(message);
+        logfile(ERROR, message);
     }
 
     public void error(String format, Object arg) {
-        log.error(format, arg);
+        logfile(ERROR, format, arg);
     }
 
     public void error(String format, Object... args) {
-        log.error(format, args);
+        logfile(ERROR, format, args);
     }
 
     public void error(String message, Throwable throwable) {
-        log.error(message, throwable);
+        logfile(ERROR, message, throwable);
+    }
+
+    private void logfile(String level, String message) {
+        String prefix = level + " " + plugin.getId() + " " + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(new Date()) + " ";
+        out.println(prefix + message);
+        out.flush();
+    }
+
+    private void logfile(String level, String format, Object... args) {
+        String prefix = level + " " + plugin.getId() + " " + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(new Date()) + " ";
+        out.printf(prefix + (format) + "%n", args);
+        out.flush();
+    }
+
+    private void logfile(String level, String message, Throwable throwable) {
+        logfile(level, message);
+        throwable.printStackTrace(out);
+        out.flush();
+    }
+
+    public void close() {
+        out.flush();
+        out.close();
     }
 }
