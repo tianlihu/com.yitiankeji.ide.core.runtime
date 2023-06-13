@@ -8,6 +8,7 @@ public class ExtensionRegistryTest {
 
     @Test
     public void load() throws Exception {
-        extensionRegistry.parseExtensions(getClass().getResourceAsStream("/plugin.xml"));
+        Plugin plugin = new Plugin("id", "name", "description", "location");
+        extensionRegistry.parseExtensions(plugin, getClass().getResourceAsStream("/plugin.xml"));
     }
 }

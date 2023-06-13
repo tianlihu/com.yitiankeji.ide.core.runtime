@@ -12,16 +12,22 @@ import java.util.Map;
 @ToString
 public class ExtensionElement {
 
-    private ExtensionElement parent;
+    private final Plugin plugin;
+    private final ExtensionElement parent;
     private final Map<String, String> attributes = new HashMap<>();
     private final List<ExtensionElement> children = new ArrayList<>();
 
-    public ExtensionElement getParent() {
-        return parent;
+    public ExtensionElement(Plugin plugin, ExtensionElement parent) {
+        this.plugin = plugin;
+        this.parent = parent;
     }
 
-    void setParent(ExtensionElement parent) {
-        this.parent = parent;
+    public Plugin getPlugin() {
+        return plugin;
+    }
+
+    public ExtensionElement getParent() {
+        return parent;
     }
 
     public String getAttribute(String name) {
@@ -34,5 +40,20 @@ public class ExtensionElement {
 
     public List<ExtensionElement> getChildren() {
         return children;
+    }
+
+    @SuppressWarnings("unchecked")
+    public <T> T createExecutableObject(String attributeName) {
+        String attribute = getAttribute(attributeName);
+        if (attribute == null) {
+            return null;
+        }
+
+        try {
+            Class<?> clazz = Class.forName(attribute);
+            return (T) clazz.getConstructor().newInstance();
+        } catch (Exception e) {
+            return null;
+        }
     }
 }

@@ -30,10 +30,6 @@ public class Plugin {
         this.state = state;
     }
 
-    public Log getLog() {
-        return log;
-    }
-
     public URL getResource(String name) {
         return null;
     }

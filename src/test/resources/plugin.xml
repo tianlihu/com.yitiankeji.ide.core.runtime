@@ -9,8 +9,8 @@
                 contributorClass="myplugin.editors.MultiPageEditorContributor">
         </editor>
     </extension>
-    <extension point="org.eclipse.ui.newWizards">
-        <category name="Sample Wizards" id="my-plugin" />
+    <extension point="myplugin.wizards.newWizards">
+        <category name="Sample Wizards" id="my-plugin"/>
         <wizard
                 id="myplugin.wizards.SampleNewWizard"
                 name="Multi-page Editor file"
