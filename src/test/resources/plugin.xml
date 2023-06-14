@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<plugin>
+<plugin id="myplugin" version="1.0.0" name="My Plugin" description="我的插件">
+    <dependencies>
+        <dependency id="dependency_plugin1" minVersion="0.0.1" maxVersion="0.0.5" />
+        <dependency id="dependency_plugin2" minVersion="1.0.1" maxVersion="1.0.5" />
+    </dependencies>
+
     <extension id="111" name="测试" point="aaa.bbb.editor">
         <editor id="myplugin.editors.MultiPageEditor"
                 name="Sample Multi-page Editor"

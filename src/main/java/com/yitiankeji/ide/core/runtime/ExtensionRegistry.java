@@ -7,14 +7,8 @@ import java.util.Map;
 
 public class ExtensionRegistry {
 
-    private static final ExtensionRegistry instance = new ExtensionRegistry();
-
     private final Map<String, List<Extension>> pointExtensionsMap = new HashMap<>();
     private final Map<String, Extension> idExtensionMap = new HashMap<>();
-
-    public static ExtensionRegistry getDefault() {
-        return instance;
-    }
 
     public Extension getExtensionById(String extensionId) {
         return idExtensionMap.get(extensionId);
