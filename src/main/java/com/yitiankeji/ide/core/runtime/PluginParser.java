@@ -8,12 +8,13 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
 public class PluginParser {
 
-    public void parse(InputStream input, String location) throws ParserConfigurationException, IOException, SAXException {
+    public void parse(InputStream input, URL location) throws ParserConfigurationException, IOException, SAXException {
         DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();
         builderFactory.setNamespaceAware(true);
         Document document = builderFactory.newDocumentBuilder().parse(input);

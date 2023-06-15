@@ -44,13 +44,13 @@ public class ExtensionElement {
 
     @SuppressWarnings("unchecked")
     public <T> T createExecutableObject(String attributeName) {
-        String attribute = getAttribute(attributeName);
-        if (attribute == null) {
+        String className = getAttribute(attributeName);
+        if (className == null) {
             return null;
         }
 
         try {
-            Class<?> clazz = Class.forName(attribute);
+            Class<?> clazz = plugin.loadClass(className);
             return (T) clazz.getConstructor().newInstance();
         } catch (Exception e) {
             return null;
