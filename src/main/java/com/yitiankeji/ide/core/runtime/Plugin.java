@@ -1,6 +1,7 @@
 package com.yitiankeji.ide.core.runtime;
 
 import lombok.Getter;
+import org.apache.commons.lang3.StringUtils;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -38,6 +39,20 @@ public class Plugin {
 
     void setState(int state) {
         this.state = state;
+    }
+
+    @SuppressWarnings("unchecked")
+    public <T> T createExecutableObject(String className) {
+        if (StringUtils.isEmpty(className)) {
+            return null;
+        }
+
+        try {
+            Class<?> clazz = loadClass(className);
+            return (T) clazz.getConstructor().newInstance();
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     public Class<?> loadClass(String className) throws ClassNotFoundException {

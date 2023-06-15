@@ -42,18 +42,8 @@ public class ExtensionElement {
         return children;
     }
 
-    @SuppressWarnings("unchecked")
     public <T> T createExecutableObject(String attributeName) {
         String className = getAttribute(attributeName);
-        if (className == null) {
-            return null;
-        }
-
-        try {
-            Class<?> clazz = plugin.loadClass(className);
-            return (T) clazz.getConstructor().newInstance();
-        } catch (Exception e) {
-            return null;
-        }
+        return plugin.createExecutableObject(className);
     }
 }
