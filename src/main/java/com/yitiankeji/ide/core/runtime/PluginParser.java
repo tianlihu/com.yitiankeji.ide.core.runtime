@@ -1,5 +1,6 @@
 package com.yitiankeji.ide.core.runtime;
 
+import lombok.AllArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.w3c.dom.*;
 import org.xml.sax.SAXException;
@@ -9,29 +10,52 @@ import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class PluginParser {
 
-    public void parse(InputStream input, URL location) throws ParserConfigurationException, IOException, SAXException {
-        DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();
-        builderFactory.setNamespaceAware(true);
-        Document document = builderFactory.newDocumentBuilder().parse(input);
-        Element root = document.getDocumentElement();
-        if (StringUtils.equals("plugin", root.getTagName())) {
-            throw new RuntimeException("plugin.xml的根节点必须是plugin");
+    public void parse(List<URL> locations) throws IOException, ParserConfigurationException, SAXException {
+        Map<String, List<ParseEntry>> parseEntryMap = new HashMap<>();
+
+        for (URL location : locations) {
+            Document document = parsePluginXml(location);
+            Element root = document.getDocumentElement();
+            String id = StringUtils.trimToNull(root.getAttribute("id"));
+            String version = StringUtils.trimToNull(root.getAttribute("version"));
+            String name = StringUtils.trimToNull(root.getAttribute("name"));
+            String description = StringUtils.trimToNull(root.getAttribute("description"));
+            Plugin plugin = new Plugin(id, version, name, description, location);
+            parseEntryMap.computeIfAbsent(plugin.getId(), k -> new ArrayList<>()).add(new ParseEntry(location, root, plugin));
         }
 
-        String id = StringUtils.trimToNull(root.getAttribute("id"));
-        String version = StringUtils.trimToNull(root.getAttribute("version"));
-        String name = StringUtils.trimToNull(root.getAttribute("name"));
-        String description = StringUtils.trimToNull(root.getAttribute("description"));
-        Plugin plugin = new Plugin(id, version, name, description, location);
-        Platform.getPluginRegistry().register(plugin);
+        List<ParseEntry> parseEntries = getLatestVersionPluginEntries(parseEntryMap);
+        parseEntryMap.clear(); // 提前释放无用的临时Map占用内存
 
+        for (ParseEntry parseEntry : parseEntries) {
+            Plugin plugin = parseEntry.plugin;
+            Platform.getPluginRegistry().register(plugin);
+            parsePlugin(plugin, parseEntry.rootElement);
+        }
+
+        parseEntries.clear(); // 清空临时列表，加速垃圾回收
+    }
+
+    private void parsePlugin(Plugin plugin, Element root) throws SAXException {
         parseDependencies(plugin, Platform.getPluginRegistry(), root);
         parseExtensions(plugin, Platform.getExtensionRegistry(), root);
+    }
+
+    private static Document parsePluginXml(URL location) throws IOException, SAXException, ParserConfigurationException {
+        try (InputStream input = location.openStream()) {
+            DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();
+            builderFactory.setNamespaceAware(true);
+            Document document = builderFactory.newDocumentBuilder().parse(input);
+            Element rootElement = document.getDocumentElement();
+            if (!StringUtils.equals("plugin", rootElement.getTagName())) {
+                throw new RuntimeException("plugin.xml的根节点必须是plugin");
+            }
+            return document;
+        }
     }
 
     private void parseDependencies(Plugin plugin, PluginRegistry pluginRegistry, Element parentNode) {
@@ -97,5 +121,34 @@ public class PluginParser {
         }
 
         return extensionElements;
+    }
+
+    private static List<ParseEntry> getLatestVersionPluginEntries(Map<String, List<ParseEntry>> parseEntryMap) {
+        ParseEntryComparator comparator = new ParseEntryComparator();
+        List<ParseEntry> result = new ArrayList<>();
+        parseEntryMap.values().forEach(parseEntries -> {
+            if (parseEntries.isEmpty()) {
+                return;
+            }
+
+            parseEntries.sort(comparator);
+            result.add(parseEntries.get(0));
+        });
+        return result;
+    }
+
+    @AllArgsConstructor
+    private static class ParseEntry {
+        URL location;
+        Element rootElement;
+        Plugin plugin;
+    }
+
+    private static class ParseEntryComparator implements Comparator<ParseEntry> {
+
+        @Override
+        public int compare(ParseEntry o1, ParseEntry o2) {
+            return VersionComparator.compare(o1.plugin.getVersion(), o2.plugin.getVersion());
+        }
     }
 }

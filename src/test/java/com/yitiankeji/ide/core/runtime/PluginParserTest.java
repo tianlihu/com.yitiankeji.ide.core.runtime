@@ -3,6 +3,7 @@ package com.yitiankeji.ide.core.runtime;
 import org.junit.jupiter.api.Test;
 
 import java.net.URL;
+import java.util.List;
 
 public class PluginParserTest {
 
@@ -10,6 +11,6 @@ public class PluginParserTest {
 
     @Test
     public void load() throws Exception {
-        pluginParser.parse(getClass().getResourceAsStream("/plugin.xml"), new URL("location"));
+        pluginParser.parse(List.of(new URL[]{getClass().getResource("/plugin.xml")}));
     }
 }
