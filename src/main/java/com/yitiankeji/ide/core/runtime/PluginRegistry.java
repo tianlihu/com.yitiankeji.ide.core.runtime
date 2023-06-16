@@ -12,7 +12,7 @@ public class PluginRegistry {
     private final Map<String, Plugin> pluginMap = new HashMap<>();
 
     void register(Plugin plugin) {
-        pluginMap.put(plugin.getVersion(), plugin);
+        pluginMap.put(plugin.getId(), plugin);
     }
 
     public Plugin getPlugin(String id) {

@@ -2,7 +2,7 @@ package com.yitiankeji.ide.core.runtime;
 
 import org.junit.jupiter.api.Test;
 
-import java.net.URL;
+import java.io.File;
 import java.util.List;
 
 public class PluginParserTest {
@@ -11,6 +11,11 @@ public class PluginParserTest {
 
     @Test
     public void load() throws Exception {
-        pluginParser.parse(List.of(new URL[]{getClass().getResource("/plugin.xml")}));
+        File jarFile1 = new File("./src/test/resources", "plugin-1.0.11.jar");
+        File jarFile2 = new File("./src/test/resources", "plugin-1.0.2.jar");
+        pluginParser.parse(List.of(new File[]{jarFile1, jarFile2}));
+
+        Plugin plugin = Platform.getPluginRegistry().getPlugin("myplugin");
+        System.out.println(plugin);
     }
 }

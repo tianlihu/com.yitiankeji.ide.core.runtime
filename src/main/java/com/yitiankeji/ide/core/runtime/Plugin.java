@@ -1,11 +1,13 @@
 package com.yitiankeji.ide.core.runtime;
 
 import lombok.Getter;
+import lombok.ToString;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -14,26 +16,27 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Getter
+@ToString
 public class Plugin {
 
     private final String id;
     private final String version;
     private final String name;
     private final String description;
-    private final URL location;
+    private final File location;
     private final Log log;
-    private final List<Plugin> dependencies = new ArrayList<>();
+    private final List<Dependency> dependencies = new ArrayList<>();
     private final ClassLoader classLoader;
 
     private int state;
 
-    public Plugin(String id, String version, String name, String description, URL location) throws IOException {
+    public Plugin(String id, String version, String name, String description, File location) throws IOException {
         this.id = id;
         this.version = version;
         this.name = name;
         this.description = description;
         this.location = location;
-        classLoader = new URLClassLoader(new URL[]{location}, Plugin.class.getClassLoader());
+        classLoader = new URLClassLoader(new URL[]{location.toURI().toURL()}, Plugin.class.getClassLoader());
         log = new Log(this);
     }
 
@@ -59,9 +62,12 @@ public class Plugin {
         try {
             return classLoader.loadClass(className);
         } catch (ClassNotFoundException e) {
-            for (Plugin dependency : dependencies) {
+            for (Dependency dependency : dependencies) {
                 try {
-                    return dependency.loadClass(className);
+                    Plugin dependencyPlugin = Platform.getPluginRegistry().getPlugin(dependency.getId());
+                    if (dependencyPlugin != null) {
+                        return dependencyPlugin.loadClass(className);
+                    }
                 } catch (ClassNotFoundException ignored) {
                 }
             }
@@ -75,8 +81,12 @@ public class Plugin {
             return resource;
         }
 
-        for (Plugin dependency : dependencies) {
-            resource = dependency.getResource(name);
+        for (Dependency dependency : dependencies) {
+            Plugin dependencyPlugin = Platform.getPluginRegistry().getPlugin(dependency.getId());
+            if (dependencyPlugin == null) {
+                return null;
+            }
+            resource = dependencyPlugin.getResource(name);
             if (resource != null) {
                 return resource;
             }
@@ -92,8 +102,12 @@ public class Plugin {
             resources.add(resource);
         }
 
-        for (Plugin dependency : dependencies) {
-            resource = dependency.getResource(name);
+        for (Dependency dependency : dependencies) {
+            Plugin dependencyPlugin = Platform.getPluginRegistry().getPlugin(dependency.getId());
+            if (dependencyPlugin == null) {
+                return null;
+            }
+            resource = dependencyPlugin.getResource(name);
             if (resource != null) {
                 resources.add(resource);
             }

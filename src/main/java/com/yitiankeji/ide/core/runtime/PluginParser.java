@@ -7,25 +7,36 @@ import org.xml.sax.SAXException;
 
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
 import java.util.*;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 
 public class PluginParser {
 
-    public void parse(List<URL> locations) throws IOException, ParserConfigurationException, SAXException {
+    /** 解析plugin.jar列表 **/
+    public void parse(List<File> locations) throws IOException, ParserConfigurationException, SAXException {
         Map<String, List<ParseEntry>> parseEntryMap = new HashMap<>();
 
-        for (URL location : locations) {
-            Document document = parsePluginXml(location);
-            Element root = document.getDocumentElement();
-            String id = StringUtils.trimToNull(root.getAttribute("id"));
-            String version = StringUtils.trimToNull(root.getAttribute("version"));
-            String name = StringUtils.trimToNull(root.getAttribute("name"));
-            String description = StringUtils.trimToNull(root.getAttribute("description"));
-            Plugin plugin = new Plugin(id, version, name, description, location);
-            parseEntryMap.computeIfAbsent(plugin.getId(), k -> new ArrayList<>()).add(new ParseEntry(location, root, plugin));
+        for (File location : locations) {
+            try (JarFile jarFile = new JarFile(location)) {
+                JarEntry pluginXmlEntry = jarFile.getJarEntry("plugin.xml");
+                if (pluginXmlEntry == null) {
+                    continue;
+                }
+
+                InputStream input = jarFile.getInputStream(pluginXmlEntry);
+                Document document = parsePluginXml(input);
+                Element root = document.getDocumentElement();
+                String id = StringUtils.trimToNull(root.getAttribute("id"));
+                String version = StringUtils.trimToNull(root.getAttribute("version"));
+                String name = StringUtils.trimToNull(root.getAttribute("name"));
+                String description = StringUtils.trimToNull(root.getAttribute("description"));
+                Plugin plugin = new Plugin(id, version, name, description, location);
+                parseEntryMap.computeIfAbsent(plugin.getId(), k -> new ArrayList<>()).add(new ParseEntry(location, root, plugin));
+            }
         }
 
         List<ParseEntry> parseEntries = getLatestVersionPluginEntries(parseEntryMap);
@@ -45,8 +56,8 @@ public class PluginParser {
         parseExtensions(plugin, Platform.getExtensionRegistry(), root);
     }
 
-    private static Document parsePluginXml(URL location) throws IOException, SAXException, ParserConfigurationException {
-        try (InputStream input = location.openStream()) {
+    private static Document parsePluginXml(InputStream input) throws IOException, SAXException, ParserConfigurationException {
+        try (input) {
             DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();
             builderFactory.setNamespaceAware(true);
             Document document = builderFactory.newDocumentBuilder().parse(input);
@@ -70,7 +81,7 @@ public class PluginParser {
             String id = dependencyNode.getAttribute("id");
             String minVersion = dependencyNode.getAttribute("minVersion");
             String maxVersion = dependencyNode.getAttribute("maxVersion");
-            System.out.println(id + "|" + minVersion + "|" + maxVersion);
+            plugin.getDependencies().add(new Dependency(id, minVersion, maxVersion));
         }
     }
 
@@ -139,7 +150,7 @@ public class PluginParser {
 
     @AllArgsConstructor
     private static class ParseEntry {
-        URL location;
+        File location;
         Element rootElement;
         Plugin plugin;
     }
