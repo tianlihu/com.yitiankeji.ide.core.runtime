@@ -1,14 +1,32 @@
 package com.yitiankeji.ide.core.runtime;
 
+import org.apache.commons.lang3.StringUtils;
+
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/** 版本对比器，按版本倒序 **/
 public class VersionComparator {
 
+    /** 版本号匹配用到的正则表达式 **/
     private static final String VERSION_PATTERN = "(\\d+|[a-zA-Z]+)(\\.(\\d+|[a-zA-Z]+))*";
-    private static final Pattern pattern = Pattern.compile(VERSION_PATTERN);
+    /** 版本号匹配用到的正则表达式编译对象 **/
+    private static final Pattern PATTERN = Pattern.compile(VERSION_PATTERN);
 
+    /**
+     * 版本比较
+     *
+     * <pre>
+     * 返回值：
+     * 1. 小于0：version1比version2大，即version1比较新
+     * 2. 等于0：version1和version2版本相同
+     * 3. 大于0：version1比version2小，即version2比较新
+     * </pre>
+     **/
     public static int compare(String version1, String version2) {
+        if (StringUtils.equals(version1, version2)) {
+            return 0;
+        }
         String[] parts1 = version1.split("\\.");
         String[] parts2 = version2.split("\\.");
 
@@ -17,8 +35,8 @@ public class VersionComparator {
             String part1 = i < parts1.length ? parts1[i] : "";
             String part2 = i < parts2.length ? parts2[i] : "";
 
-            Matcher m1 = pattern.matcher(part1);
-            Matcher m2 = pattern.matcher(part2);
+            Matcher m1 = PATTERN.matcher(part1);
+            Matcher m2 = PATTERN.matcher(part2);
             if (m1.matches() && m2.matches()) {
                 boolean isNumber1 = isNumber(part1);
                 boolean isNumber2 = isNumber(part2);
@@ -48,6 +66,7 @@ public class VersionComparator {
         return 0;
     }
 
+    /** 判断字符串是否是数字 **/
     private static boolean isNumber(String str) {
         try {
             Integer.parseInt(str);

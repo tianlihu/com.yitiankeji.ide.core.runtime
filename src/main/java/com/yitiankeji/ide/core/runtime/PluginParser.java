@@ -14,6 +14,10 @@ import java.util.*;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
+/**
+ * 插件Jar包解析器
+ * 主要解析jar包中的核心配置plugin.xml文件
+ **/
 public class PluginParser {
 
     /** 解析plugin.jar列表 **/
@@ -47,6 +51,7 @@ public class PluginParser {
         parseEntries.clear(); // 清空临时列表，加速垃圾回收
     }
 
+    /** 解析plugin.xml并返回XML Document对象 **/
     static Document parsePluginXml(InputStream input) throws IOException, SAXException, ParserConfigurationException {
         try (input) {
             DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();
@@ -60,6 +65,7 @@ public class PluginParser {
         }
     }
 
+    /** 解析plugin.xml文件中插件的基本信息，并构建Plugin对象 **/
     static Plugin parsePlugin(File location, Element root) throws IOException {
         String id = StringUtils.trimToNull(root.getAttribute("id"));
         String version = StringUtils.trimToNull(root.getAttribute("version"));
@@ -68,11 +74,13 @@ public class PluginParser {
         return new Plugin(id, version, name, description, location);
     }
 
+    /** 解析plugin.xml文件中依赖信息、扩展信息 **/
     static void parsePlugin(Plugin plugin, Element root) throws SAXException {
         parseDependencies(plugin, Platform.getPluginRegistry(), root);
         parseExtensions(plugin, Platform.getExtensionRegistry(), root);
     }
 
+    /** 解析plugin.xml文件中依赖信息 **/
     private static void parseDependencies(Plugin plugin, PluginRegistry pluginRegistry, Element parentNode) {
         NodeList dependenciesNode = parentNode.getElementsByTagName("dependencies");
         if (dependenciesNode.getLength() == 0) {
@@ -89,6 +97,7 @@ public class PluginParser {
         }
     }
 
+    /** 解析plugin.xml文件中扩展信息 **/
     private static void parseExtensions(Plugin plugin, ExtensionRegistry extensionRegistry, Element parentNode) throws SAXException {
         NodeList extensionNodes = parentNode.getElementsByTagName("extension");
         for (int i = 0; i < extensionNodes.getLength(); i++) {
@@ -101,15 +110,17 @@ public class PluginParser {
 
             String id = StringUtils.trimToNull(extensionElement.getAttribute("id"));
             String name = StringUtils.trimToNull(extensionElement.getAttribute("name"));
-            Extension extension = new Extension(id, name, point);
+            Extension extension = new Extension(id, name, point, plugin);
 
             List<ExtensionElement> extensionElements = parseExtensionElements(plugin, extensionElement, null);
             extension.getExtensionElements().addAll(extensionElements);
 
             extensionRegistry.saveExtension(extension);
+            plugin.getExtensions().add(extension);
         }
     }
 
+    /** 解析plugin.xml文件中扩展信息中的元素信息，递归解析 **/
     private static List<ExtensionElement> parseExtensionElements(Plugin plugin, Element parentNode, ExtensionElement parent) {
         NodeList children = parentNode.getChildNodes();
         List<ExtensionElement> extensionElements = new ArrayList<>();
@@ -138,6 +149,7 @@ public class PluginParser {
         return extensionElements;
     }
 
+    /** 获取所有插件的最新版本列表 **/
     private static List<ParseEntry> getLatestVersionPluginEntries(Map<String, List<ParseEntry>> parseEntryMap) {
         ParseEntryComparator comparator = new ParseEntryComparator();
         List<ParseEntry> result = new ArrayList<>();
@@ -152,6 +164,7 @@ public class PluginParser {
         return result;
     }
 
+    /** 暂存解析中插件的位置、plugin.xml根结点、插件对象，用于获取每个插件的最新版本 **/
     @AllArgsConstructor
     private static class ParseEntry {
         File location;
@@ -159,6 +172,7 @@ public class PluginParser {
         Plugin plugin;
     }
 
+    /** 插件版本对比器，按版本倒序 **/
     private static class ParseEntryComparator implements Comparator<ParseEntry> {
 
         @Override
