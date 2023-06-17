@@ -17,7 +17,7 @@ import java.util.jar.JarFile;
 public class PluginParser {
 
     /** 解析plugin.jar列表 **/
-    public void parse(List<File> locations) throws IOException, ParserConfigurationException, SAXException {
+    public static void parse(List<File> locations) throws IOException, ParserConfigurationException, SAXException {
         Map<String, List<ParseEntry>> parseEntryMap = new HashMap<>();
 
         for (File location : locations) {
@@ -30,11 +30,7 @@ public class PluginParser {
                 InputStream input = jarFile.getInputStream(pluginXmlEntry);
                 Document document = parsePluginXml(input);
                 Element root = document.getDocumentElement();
-                String id = StringUtils.trimToNull(root.getAttribute("id"));
-                String version = StringUtils.trimToNull(root.getAttribute("version"));
-                String name = StringUtils.trimToNull(root.getAttribute("name"));
-                String description = StringUtils.trimToNull(root.getAttribute("description"));
-                Plugin plugin = new Plugin(id, version, name, description, location);
+                Plugin plugin = parsePlugin(location, root);
                 parseEntryMap.computeIfAbsent(plugin.getId(), k -> new ArrayList<>()).add(new ParseEntry(location, root, plugin));
             }
         }
@@ -51,12 +47,7 @@ public class PluginParser {
         parseEntries.clear(); // 清空临时列表，加速垃圾回收
     }
 
-    private void parsePlugin(Plugin plugin, Element root) throws SAXException {
-        parseDependencies(plugin, Platform.getPluginRegistry(), root);
-        parseExtensions(plugin, Platform.getExtensionRegistry(), root);
-    }
-
-    private static Document parsePluginXml(InputStream input) throws IOException, SAXException, ParserConfigurationException {
+    static Document parsePluginXml(InputStream input) throws IOException, SAXException, ParserConfigurationException {
         try (input) {
             DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();
             builderFactory.setNamespaceAware(true);
@@ -69,7 +60,20 @@ public class PluginParser {
         }
     }
 
-    private void parseDependencies(Plugin plugin, PluginRegistry pluginRegistry, Element parentNode) {
+    static Plugin parsePlugin(File location, Element root) throws IOException {
+        String id = StringUtils.trimToNull(root.getAttribute("id"));
+        String version = StringUtils.trimToNull(root.getAttribute("version"));
+        String name = StringUtils.trimToNull(root.getAttribute("name"));
+        String description = StringUtils.trimToNull(root.getAttribute("description"));
+        return new Plugin(id, version, name, description, location);
+    }
+
+    static void parsePlugin(Plugin plugin, Element root) throws SAXException {
+        parseDependencies(plugin, Platform.getPluginRegistry(), root);
+        parseExtensions(plugin, Platform.getExtensionRegistry(), root);
+    }
+
+    private static void parseDependencies(Plugin plugin, PluginRegistry pluginRegistry, Element parentNode) {
         NodeList dependenciesNode = parentNode.getElementsByTagName("dependencies");
         if (dependenciesNode.getLength() == 0) {
             return;

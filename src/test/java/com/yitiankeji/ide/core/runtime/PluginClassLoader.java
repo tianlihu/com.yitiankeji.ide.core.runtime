@@ -9,7 +9,7 @@ public class PluginClassLoader {
     public static void main(String[] args) throws Exception {
         String jarFilePath = "file:D:\\Workspace\\ide\\test\\target\\test-1.0-SNAPSHOT.jar";
 
-        URLClassLoader classLoader = new URLClassLoader(new URL[] {new URL(jarFilePath)});
+        URLClassLoader classLoader = new URLClassLoader(new URL[]{new URL(jarFilePath)});
 
         // 加载类
         Class<?> clazz = classLoader.loadClass("com.yitiankeji.ide.AAA");
